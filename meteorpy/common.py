@@ -115,7 +115,8 @@ def iso2datetime(iso):
         except ValueError:
             pass
         
-    return None
+    #return None
+    raise ValueError("Illegal date/time string. Please use the format 'YYYY-MM-DD HH:MM:SS'.")
 
 
 
