@@ -11,12 +11,12 @@ if __name__ == '__main__':
     mpl.use('Agg') 
 import matplotlib.pyplot as plt
 
-from meteorpy import vmo, common
 import datetime
 import os
-
 import pg
 
+import vmo
+import common
 
 class FluxData(object):
     '''
@@ -319,7 +319,7 @@ class FluxGraph(object):
             for i in range(len(bins['time'])):
                 html += "\t<tr>"
                 html += "<td>%s</td><td>%.3f</td><td>%.1f</td><td>%.1f</td><td>%d</td><td>%.1f &plusmn; %.1f</td><td>%.0f</td>" \
-                    % ( str(bins['time'][i])[0:16], common.sollon(bins['time'][i]), bins['teff'][i]/60.0, bins['eca'][i]/1000.0, bins['met'][i], bins['flux'][i], bins['e_flux'][i], self.flux2zhr(bins['flux'][i]) )
+                    % ( str(bins['time'][i])[0:16], common.sollon(bins['time'][i]), bins['teff'][i]/60.0, bins['eca'][i]/1000.0, bins['met'][i], bins['flux'][i], bins['e_flux'][i], self.flux2zhr(bins['flux'][i], self._popindex) )
                 html += "</tr>\n"
             html += "</table>"
             html += "<p style='text-align:center;'>(*) ZHR estimate derived following (<a href='http://adsabs.harvard.edu/abs/1990JIMO...18..119K'>Koschack &amp; Rendtel 1990b, Eqn. 41</a>)</p>"
@@ -434,9 +434,8 @@ class FluxGraph(object):
         
         return d.strftime(fmt)
 
-    @staticmethod
-    def zhr_formatter(a, b):
-        zhr = FluxGraph.flux2zhr(a)
+    def zhr_formatter(self, a, b):
+        zhr = FluxGraph.flux2zhr(a, self._popindex)
         if round(zhr) < 10:
             return "%.1f" % zhr
         else:
@@ -510,6 +509,8 @@ if __name__ == '__main__':
                       metavar="HOURS", help="minimum bin length, default = 1 h")
     parser.add_option("-j", "--max-interval", dest="max_interval", default="24.0", type="float", \
                       metavar="HOURS", help="maximum bin length, default = 24 h")
+    parser.add_option("-r", "--popindex", dest="popindex", default="2.0", type="float", \
+                      metavar="POPINDEX", help="population index")
     parser.add_option("-s", "--stations", dest="stations", default="", type="string", \
                       metavar="STATIONS", help="stations separated by commas")
     parser.add_option("-d", "--plot-dir", dest="plot_dir", default="/export/metrecflux/public_html/tmp/", type="string", \
@@ -524,7 +525,7 @@ if __name__ == '__main__':
     fg = FluxPage(args[0], args[1], args[2], \
                    min_meteors=opts.min_meteors, min_eca=opts.min_eca, \
                    min_interval=opts.min_interval, max_interval=opts.max_interval, \
-                   stations=opts.stations)
+                   popindex=opts.popindex, stations=opts.stations)
     fg.printHTML(output=opts.output, plotdir=opts.plot_dir)
     
     time_finish = datetime.datetime.now()
