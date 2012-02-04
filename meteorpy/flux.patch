@@ -1,0 +1,159 @@
+--- flux.py	2011-11-28 23:38:08.000000000 +0000
++++ /tmp/flux.py	2012-02-04 17:06:45.000000000 +0000
+@@ -20,18 +20,6 @@
+ 
+ import pg
+ 
+-# Poissonian confidence intervals, expressed as a function of sigma
+-from scipy import interpolate
+-pois_n = [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,20,25,30,40,50,100,500,1000,5000,999999999]
+-pois_2_5 = [-0.71,-1.14,-1.32,-1.42,-1.48,-1.53,-1.57,-1.60,-1.62,-1.64,-1.65,-1.67,-1.68,-1.69,-1.70,-1.71,-1.74,-1.77,-1.78,-1.81,-1.82,-1.86,-1.92,-1.93,-1.95,-1.96]
+-pois_16 = [-0.68,-0.88,-0.93,-0.95,-0.96,-0.96,-0.97,-0.97,-0.98,-0.98,-0.98,-0.98,-0.98,-0.98,-0.98,-0.98,-0.99,-0.99,-0.99,-0.99,-0.99,-0.99,-0.99,-0.99,-0.99,-1.00]
+-pois_50 = [-0.39,-0.26,-0.20,-0.17,-0.16,-0.14,-0.13,-0.12,-0.11,-0.11,-0.10,-0.10,-0.09,-0.09,-0.09,-0.08,-0.07,-0.07,-0.06,-0.05,-0.05,-0.03,-0.01,-0.01,-0.00,-0.00]
+-pois_84 = [+0.69,+0.88,+0.93,+0.95,+0.96,+0.96,+0.97,+0.97,+0.97,+0.98,+0.98,+0.98,+0.98,+0.98,+0.98,+0.98,+0.99,+0.99,+0.99,+0.99,+0.99,+0.99,+0.99,+0.99,+0.99,+1.00]
+-pois_97_5 = [+2.85,+2.59,+2.48,+2.41,+2.36,+2.33,+2.30,+2.28,+2.26,+2.25,+2.23,+2.22,+2.21,+2.20,+2.20,+2.19,+2.16,+2.14,+2.13,+2.10,+2.09,+2.05,+2.00,+1.99,+1.97,+1.96]
+-
+-p16 = interpolate.interp1d(pois_n, pois_16, kind="linear")
+-p84 = interpolate.interp1d(pois_n, pois_84, kind="linear")
+-
+ 
+ class FluxData(object):
+     '''
+@@ -81,8 +69,8 @@
+                      time >= '%s'::timestamp AND time <= '%s'::timestamp
+                      AND shower = '%s' 
+                      AND eca IS NOT NULL
+-                     AND eca > 0.00
+-                     %s
++                     AND eca >0.50
++		     %s
+                  GROUP BY time 
+                  ORDER BY time""" % (pg.escape_string(str(self._begin)), pg.escape_string(str(self._end)), \
+                                      pg.escape_string(self._shower), stationcond)
+@@ -111,7 +99,7 @@
+             
+             deltaseconds = self.diff_seconds(rowtime - current_bin_start)
+             deltahours = deltaseconds/3600.0
+-
++            
+             if (current_bin_met >= self._min_meteors \
+                     and current_bin_eca >= (self._min_eca*1000.0) \
+                     and deltahours >= self._min_interval) \
+@@ -122,13 +110,12 @@
+                 bins_met.append( current_bin_met )
+                 current_bin_deltaseconds = []
+                 current_bin_start, current_bin_teff, current_bin_eca, current_bin_met = rowtime, 0, 0, 0
+-
++        
+             current_bin_deltaseconds.append( deltaseconds )
+             current_bin_teff += row['teff']
+             current_bin_eca += row['eca']
+             current_bin_met += row['met']
+-            
+-        
++
+         if current_bin_met > 5:
+             bins_time.append( current_bin_start+datetime.timedelta(seconds=np.mean(current_bin_deltaseconds)) )
+             bins_teff.append( current_bin_teff )
+@@ -140,16 +127,11 @@
+         teff = np.array(bins_teff)
+         count = np.array(bins_met)
+         # Units: meteoroids / 1000 km^2 h
+-        flux = 1000.0*((count+0.5)/eca)
+-        sigma = 1000.0*np.sqrt(count+0.5)/eca
+-        e_flux = sigma
+-        e_flux16 = -p16(count)*sigma
+-        e_flux84 = p84(count)*sigma
+-        
++        flux = 1000.0*((count+0.5)/eca) 
++        e_flux = 1000.0*np.sqrt(count+0.5)/eca
+         self._bins = {'shower':self._shower, \
+                 'time':time, 'teff':teff, \
+                 'flux':flux, 'e_flux':e_flux, \
+-                'e_flux16':e_flux16, 'e_flux84':e_flux84, \
+                 'met':count, 'eca':eca}
+     
+     def getData(self):
+@@ -209,7 +191,7 @@
+         ax.grid(which="both")
+         
+         if len(bins) > 0:
+-            ax.errorbar(bins['time'], bins['flux'], yerr=[bins['e_flux16'], bins['e_flux84']], fmt="s", ms=4, lw=1.0, c='red' )    #fmt="+", ms=8    
++            ax.errorbar(bins['time'], bins['flux'], yerr=bins['e_flux'], fmt="s", ms=4, lw=1.0, c='red' )    #fmt="+", ms=8    
+         
+         ax.set_xlim([self._begin, self._end])
+         ax2.set_xlim([self._begin, self._end])
+@@ -223,7 +205,7 @@
+         
+         if self._timespan > 90*24*3600: # 90 days
+             """ More than 5 days: only show dates """
+-            majorLocator = mpl.dates.AutoDateLocator(minticks=6, maxticks=10)
++            majorLocator = mpl.dates.AutoDateLocator(maxticks=10)
+             sollonLocator = majorLocator
+             majorFormatter = mpl.dates.DateFormatter('%d %b')
+             xlabel = "Date (UT, %s)" % self._begin.year   
+@@ -339,7 +321,7 @@
+             html += "<th>n%s</th><th>Flux<br/>[10<sup>-3</sup>&#183;km<sup>-2</sup>&#183;h<sup>-1</sup>]</th><th>ZHR<sup>*</sup></th></thead>\n" % bins['shower']
+             for i in range(len(bins['time'])):
+                 html += "\t<tr>"
+-                html += "<td>%s</td><td>%.3f</td><td>%.0f</td><td>%.0f</td><td>%d</td><td>%.1f &plusmn; %.1f</td><td>%.0f</td>" \
++                html += "<td>%s</td><td>%.3f</td><td>%.1f</td><td>%.1f</td><td>%d</td><td>%.1f &plusmn; %.1f</td><td>%.0f</td>" \
+                     % ( str(bins['time'][i])[0:16], common.sollon(bins['time'][i]), bins['teff'][i]/60.0, bins['eca'][i]/1000.0, bins['met'][i], bins['flux'][i], bins['e_flux'][i], self.flux2zhr(bins['flux'][i]) )
+                 html += "</tr>\n"
+             html += "</table>"
+@@ -369,8 +351,8 @@
+                          LEFT JOIN metrecflux_meta AS meta ON x.filename = meta.filename
+                          WHERE time BETWEEN '%s' AND '%s' 
+                          AND shower = '%s'
+-                         AND eca IS NOT NULL 
+-                         AND eca > 0.00 
++        	         AND eca IS NOT NULL
++	                 AND eca > 0.00
+                          %s
+                          GROUP BY UPPER(station)
+                          ORDER BY UPPER(station) ) AS a
+@@ -383,8 +365,8 @@
+                             WHERE 
+                                 time BETWEEN '%s' AND '%s' 
+                                 AND shower= 'SPO'
+-                                 AND eca IS NOT NULL 
+-                                 AND eca > 0.00 
++    		                AND eca IS NOT NULL
++                		AND eca > 0.00
+                             GROUP BY UPPER(station)
+                         ) AS b ON a.station = b.station        
+                          """ % (pg.escape_string(str(self._begin)), pg.escape_string(str(self._end)), \
+@@ -458,10 +440,10 @@
+     @staticmethod
+     def zhr_formatter(a, b):
+         zhr = FluxGraph.flux2zhr(a)
+-        #if round(zhr) < 10:
+-        #    return "%.1f" % zhr
+-        #else:
+-        return "%.0f" % zhr
++        if round(zhr) < 10:
++            return "%.1f" % zhr
++        else:
++        	return "%.0f" % zhr
+         
+     
+ 
+@@ -499,6 +481,9 @@
+             html += "</div>\n"
+             print html.encode("utf8")
+             sys.stdout.flush()
++
++            self._fluxgraph.savePlot("%s/%s_dpi300.png" % (plotdir, prefix), dpi=300)
++            self._fluxgraph.savePlot("%s/%s.pdf" % (plotdir, prefix), dpi=100)
+             
+             html = ""
+             html += "<div id='showertable'>\n"
+@@ -507,8 +492,6 @@
+             print html.encode("utf8")
+             sys.stdout.flush()
+             
+-            self._fluxgraph.savePlot("%s/%s_dpi300.png" % (plotdir, prefix), dpi=300)
+-            self._fluxgraph.savePlot("%s/%s.pdf" % (plotdir, prefix), dpi=100)
+ 
+         
+ 

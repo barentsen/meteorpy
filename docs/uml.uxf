@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<diagram program="umlet" version="11.3">
+  <zoom_level>10</zoom_level>
+  <element>
+    <type>com.umlet.element.Class</type>
+    <coordinates>
+      <x>300</x>
+      <y>260</y>
+      <w>230</w>
+      <h>220</h>
+    </coordinates>
+    <panel_attributes>FluxGraph
+--
+begin, end, shower
+binning options
+_ax
+--
+__init__(begin,end,shower, args..)
+_compute()
+savePlot()
+saveMap()
+getFluxTable(format)
+getObserverTable(format)
+
+</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <type>com.umlet.element.Class</type>
+    <coordinates>
+      <x>620</x>
+      <y>220</y>
+      <w>290</w>
+      <h>250</h>
+    </coordinates>
+    <panel_attributes>FluxData
+--
+db
+--
+__init__(begin, end, shower, args...)
+_load()
+_bin()
+getData()</panel_attributes>
+    <additional_attributes/>
+  </element>
+</diagram>
