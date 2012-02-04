@@ -163,6 +163,7 @@ class FluxGraph(object):
         self._begin = common.iso2datetime(begin)
         self._end = common.iso2datetime(end)
         self._shower = shower
+        
         # Total number of seconds represented along X axis
         self._timespan = (self._end-self._begin).total_seconds()
                 
@@ -319,7 +320,7 @@ class FluxGraph(object):
             for i in range(len(bins['time'])):
                 html += "\t<tr>"
                 html += "<td>%s</td><td>%.3f</td><td>%.1f</td><td>%.1f</td><td>%d</td><td>%.1f &plusmn; %.1f</td><td>%.0f</td>" \
-                    % ( str(bins['time'][i])[0:16], common.sollon(bins['time'][i]), bins['teff'][i]/60.0, bins['eca'][i]/1000.0, bins['met'][i], bins['flux'][i], bins['e_flux'][i], self.flux2zhr(bins['flux'][i], self._popindex) )
+                    % ( str(bins['time'][i])[0:16], common.sollon(bins['time'][i]), bins['teff'][i]/60.0, bins['eca'][i]/1000.0, bins['met'][i], bins['flux'][i], bins['e_flux'][i], self.flux2zhr(bins['flux'][i], self._fluxdata._popindex) )
                 html += "</tr>\n"
             html += "</table>"
             html += "<p style='text-align:center;'>(*) ZHR estimate derived following (<a href='http://adsabs.harvard.edu/abs/1990JIMO...18..119K'>Koschack &amp; Rendtel 1990b, Eqn. 41</a>)</p>"
@@ -435,7 +436,7 @@ class FluxGraph(object):
         return d.strftime(fmt)
 
     def zhr_formatter(self, a, b):
-        zhr = FluxGraph.flux2zhr(a, self._popindex)
+        zhr = FluxGraph.flux2zhr(a, self._fluxdata._popindex)
         if round(zhr) < 10:
             return "%.1f" % zhr
         else:

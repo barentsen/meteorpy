@@ -2,6 +2,7 @@
 Connect to the PostgreSQL VMO database
 '''
 import numpy as np
+import os
 import pg   # Provided by Debian package "python-pygresql"
 import ConfigParser
 
@@ -18,8 +19,8 @@ class VMO(object):
         Constructor
         '''
         config = ConfigParser.ConfigParser()
-        config.read("config/vmo.ini")
-        self.db = pg.connect(host=config.get("DB", "host"), port=config.get("DB", "port"), \
+        config.read(os.path.dirname(__file__)+"/config/vmo.ini")
+        self.db = pg.connect(host=config.get("DB", "host"), port=int(config.get("DB", "port")), \
                              dbname=config.get("DB", "name"), \
                              user=config.get("DB", "user"), passwd=config.get("DB", "pass"))
         
