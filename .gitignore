@@ -1,0 +1,14 @@
+# Compiled files
+*.py[co]
+*.a
+*.o
+*.so
+__pycache__
+
+*.egg-info
+tmp/
+build/
+dist/
+
+# Config files
+meteorpy/config/vmo.ini
