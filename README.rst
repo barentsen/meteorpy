@@ -4,7 +4,7 @@ MeteorPy
 
 :Version: 0.1
 :Authors: Geert Barentsen
-:Web site: https://www.barentsen.be
+:Web site: http://www.barentsen.be
 :License: MeteorPy is released under the GPL license
 
 
