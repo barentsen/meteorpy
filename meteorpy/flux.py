@@ -157,7 +157,7 @@ class FluxData(object):
         
         # Temporary variables
         current_bin_end = self._begin + bin_length
-        current_bin_teff, current_bin_eca, current_bin_met = 0, 0, 0, 0
+        current_bin_teff, current_bin_eca, current_bin_met = 0, 0, 0
         
         # Loop over data
         for row in self._data:
@@ -166,10 +166,11 @@ class FluxData(object):
             
             # Create new bin if boundary passed
             if (rowtime >= current_bin_end):
-                bins_time.append( current_bin_end - length/2 )
+                bins_time.append( current_bin_end - bin_length/2 )
                 bins_teff.append( current_bin_teff )
                 bins_eca.append( current_bin_eca )
                 bins_met.append( current_bin_met )
+                
                 current_bin_end += bin_length
                 current_bin_teff, current_bin_eca, current_bin_met = 0, 0, 0
             
@@ -179,7 +180,7 @@ class FluxData(object):
             current_bin_met += row['met']
         
         # Final bin
-        bins_time.append( current_bin_end - length/2 )
+        bins_time.append( current_bin_end - bin_length/2 )
         bins_teff.append( current_bin_teff )
         bins_eca.append( current_bin_eca )
         bins_met.append( current_bin_met )
@@ -223,12 +224,17 @@ class FluxGraph(object):
     classdocs
     '''
     _debug = False
+    _ymax = None
 
     def __init__(self, shower, begin, end, **keywords):
+    	self._shower = shower
         # Convert ISO timestamps to Python DateTime objects
         self._begin = common.iso2datetime(begin)
         self._end = common.iso2datetime(end)
-        self._shower = shower
+
+        # Set other parameters which have been supplied
+        for kw in keywords.keys():
+            self.__setattr__("_"+kw, keywords[kw])
         
         # Total number of seconds represented along X axis
         self._timespan = (self._end-self._begin).total_seconds()
@@ -236,7 +242,7 @@ class FluxGraph(object):
             raise Exception("Requested time interval too long.")
             
         
-        self._fluxdata = FluxData(shower, begin, end, **keywords)
+        self._fluxdata = FluxData(shower, self._begin, self._end, **keywords)
 
         
     
@@ -264,10 +270,16 @@ class FluxGraph(object):
         ax2.set_xlim([self._begin, self._end])
         ax_zhr.set_xlim([self._begin, self._end])
         
+        # Determine the limit of the Y axis
+        if self._ymax:
+        	my_ymax = self._ymax
+        else:
+        	my_ymax = 1.1*max(bins['flux']+bins['e_flux'])
+        
         if len(bins) > 0:
-            ax.set_ylim([0, 1.1*max(bins['flux']+bins['e_flux']) ])
-            ax2.set_ylim([0, 1.1*max(bins['flux']+bins['e_flux']) ])
-            ax_zhr.set_ylim([0, 1.1*max(bins['flux']+bins['e_flux']) ])        
+            ax.set_ylim([0, my_ymax])
+            ax2.set_ylim([0, my_ymax])
+            ax_zhr.set_ylim([0, my_ymax])        
         
         
         if self._timespan > 90*24*3600: # 90 days
@@ -564,7 +576,7 @@ class FluxPage(object):
 
 if __name__ == '__main__':
     """
-    Example: python flux.py LYR 2011-04-21T18:00:00 2011-04-24T06:00:00
+    Example: python flux.py -d /tmp LYR 2011-04-21T18:00:00 2011-04-24T06:00:00
     """
     time_start = datetime.datetime.now()
     
@@ -572,7 +584,7 @@ if __name__ == '__main__':
     usage = "usage: %prog [options] shower begin end"
     parser = OptionParser(usage)
     parser.add_option("-b", "--bin-mode", dest="bin_mode", default="adaptive", type="string", \
-                      metavar="N", help="minimum number of meteors per bin, default = 20")
+                      metavar="BINMODE", help="binning algorithm to use, default = adaptive")
     parser.add_option("-m", "--min-meteors", dest="min_meteors", default="20", type="int", \
                       metavar="N", help="minimum number of meteors per bin, default = 20")
     parser.add_option("-e", "--min-eca", dest="min_eca", default="0", type="float", \
@@ -583,6 +595,8 @@ if __name__ == '__main__':
                       metavar="HOURS", help="maximum bin length, default = 24 h")
     parser.add_option("-r", "--popindex", dest="popindex", default="2.0", type="float", \
                       metavar="POPINDEX", help="population index")
+    parser.add_option("-y", "--ymax", dest="ymax", default=None, type="float", \
+                      metavar="YMAX", help="maximum limit of the Y axis")
     parser.add_option("-s", "--stations", dest="stations", default="", type="string", \
                       metavar="STATIONS", help="stations separated by commas")
     parser.add_option("-d", "--plot-dir", dest="plot_dir", default="/export/metrecflux/public_html/tmp/", type="string", \
@@ -595,7 +609,7 @@ if __name__ == '__main__':
         print "Error: need at least 3 arguments"
     
     fg = FluxPage(args[0], args[1], args[2], \
-    			   bin_mode=opts.bin_mode, \
+    			   bin_mode=opts.bin_mode, ymax=opts.ymax, \
                    min_meteors=opts.min_meteors, min_eca=opts.min_eca, \
                    min_interval=opts.min_interval, max_interval=opts.max_interval, \
                    popindex=opts.popindex, stations=opts.stations)
