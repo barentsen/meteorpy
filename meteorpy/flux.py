@@ -166,10 +166,12 @@ class FluxData(object):
             
             # Create new bin if boundary passed
             if (rowtime >= current_bin_end):
-                bins_time.append( current_bin_end - bin_length/2 )
-                bins_teff.append( current_bin_teff )
-                bins_eca.append( current_bin_eca )
-                bins_met.append( current_bin_met )
+            	if (current_bin_met >= self._min_meteors \
+            		and current_bin_eca >= (self._min_eca*1000.0)): 
+            		bins_time.append( current_bin_end - bin_length/2 )
+            		bins_teff.append( current_bin_teff )
+            		bins_eca.append( current_bin_eca )
+            		bins_met.append( current_bin_met )
                 
                 current_bin_end += bin_length
                 current_bin_teff, current_bin_eca, current_bin_met = 0, 0, 0
@@ -180,10 +182,12 @@ class FluxData(object):
             current_bin_met += row['met']
         
         # Final bin
-        bins_time.append( current_bin_end - bin_length/2 )
-        bins_teff.append( current_bin_teff )
-        bins_eca.append( current_bin_eca )
-        bins_met.append( current_bin_met )
+        if (current_bin_met >= self._min_meteors \
+            		and current_bin_eca >= (self._min_eca*1000.0)):
+			bins_time.append( current_bin_end - bin_length/2 )
+			bins_teff.append( current_bin_teff )
+			bins_eca.append( current_bin_eca )
+			bins_met.append( current_bin_met )
                 
         time = np.array(bins_time)
         eca = np.array(bins_eca)
