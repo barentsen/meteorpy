@@ -126,22 +126,21 @@ class FluxData(object):
 					bins_eca.append( current_bin_eca )
 					bins_met.append( current_bin_met )
 
-                print "BLA"
+                
                 #Start counting the duration of the next bin from the end of the last
-                #print current_bin_deltaseconds
                 if (deltahours >= self._max_interval):
-					# Unless previous bin was not adaptive, then we add the max_interval
+					# If previous bin was cut off because of max_interval
 					current_bin_start += datetime.timedelta(hours=self._max_interval)
                 else:
-                	# New start time is the end of the previous bin
+                	# Otherwise start from true end of previous bin
                 	current_bin_start += datetime.timedelta(seconds=current_bin_deltaseconds[-1])
                 
-                print "New bin starts at %s" % current_bin_start
+                #print "New bin starts at %s" % current_bin_start
                 # Reset bins
                 current_bin_teff, current_bin_eca, current_bin_met = 0, 0, 0
                 current_bin_deltaseconds = []
                 deltaseconds = self.diff_seconds(rowtime - current_bin_start)
-                print deltaseconds
+                #print deltaseconds
             
             current_bin_deltaseconds.append( deltaseconds )
             current_bin_teff += row['teff']
