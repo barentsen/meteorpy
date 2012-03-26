@@ -103,7 +103,7 @@ class FluxData(object):
     def _bin_adaptive(self):
         bins_time, bins_teff, bins_eca, bins_met = [], [], [], []
         
-        current_bin_deltaseconds = [0]
+        current_bin_deltaseconds = []
         current_bin_start = self._begin
         current_bin_teff, current_bin_eca, current_bin_met = 0, 0, 0
         for row in self._data:
@@ -112,19 +112,34 @@ class FluxData(object):
             deltaseconds = self.diff_seconds(rowtime - current_bin_start)
             deltahours = deltaseconds/3600.0
             
+            #if (current_bin_met >= self._min_meteors \
+            #        and current_bin_eca >= (self._min_eca*1000.0) \
+            #        and deltahours >= self._min_interval) \
+            #    or (deltahours >= self._max_interval):
             if (current_bin_met >= self._min_meteors \
-                    and current_bin_eca >= (self._min_eca*1000.0) \
-                    and deltahours >= self._min_interval) \
-                or (deltahours >= self._max_interval):
-                if (current_bin_eca > 0):
+            or current_bin_eca >= (self._min_eca*1000.0) \
+            or deltahours >= self._max_interval) \
+            and (deltahours >= self._min_interval):
+                if len(current_bin_deltaseconds) > 0:
 					bins_time.append( current_bin_start+datetime.timedelta(seconds=np.mean(current_bin_deltaseconds)) )
 					bins_teff.append( current_bin_teff )
 					bins_eca.append( current_bin_eca )
 					bins_met.append( current_bin_met )
-                current_bin_deltaseconds = [0.0]
-                current_bin_start = rowtime
+					
+					#current_bin_start = rowtime
+					#Start counting the duration of the next bin from the end of the last
+					#print current_bin_deltaseconds
+					# New start time is the end of the previous bin 
+					current_bin_start += datetime.timedelta(seconds=current_bin_deltaseconds[-1])
+                else:
+                	# Unless previous bin was empty, then we add the max_interval
+                	current_bin_start += datetime.timedelta(hours=self._max_interval)
+                
+                # Reset bins
                 current_bin_teff, current_bin_eca, current_bin_met = 0, 0, 0
-        
+                current_bin_deltaseconds = []
+                deltaseconds = self.diff_seconds(rowtime - current_bin_start)
+            
             current_bin_deltaseconds.append( deltaseconds )
             current_bin_teff += row['teff']
             current_bin_eca += row['eca']
