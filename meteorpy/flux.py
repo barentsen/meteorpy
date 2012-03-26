@@ -167,7 +167,8 @@ class FluxData(object):
             # Create new bin if boundary passed
             if (rowtime >= current_bin_end):
             	if (current_bin_met >= self._min_meteors \
-            		and current_bin_eca >= (self._min_eca*1000.0)): 
+            		and current_bin_eca >= (self._min_eca*1000.0) \
+            		and current_bin_eca > 0): 
             		bins_time.append( current_bin_end - bin_length/2 )
             		bins_teff.append( current_bin_teff )
             		bins_eca.append( current_bin_eca )
@@ -183,7 +184,8 @@ class FluxData(object):
         
         # Final bin
         if (current_bin_met >= self._min_meteors \
-            		and current_bin_eca >= (self._min_eca*1000.0)):
+            and current_bin_eca >= (self._min_eca*1000.0) \
+            and current_bin_eca > 0):
 			bins_time.append( current_bin_end - bin_length/2 )
 			bins_teff.append( current_bin_teff )
 			bins_eca.append( current_bin_eca )
