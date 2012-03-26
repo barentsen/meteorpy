@@ -29,15 +29,19 @@ class FluxData(object):
     _min_interval = 0.2 # Hours
     _max_interval = 24 # Hours
     _stations = ""
+    _bin_mode = "adaptive"
 
     def __init__(self, shower, begin, end, **keywords):
         '''
         Constructor
+        @shower: three-letter code
+        @begin: Python datetime object
+        @end: Python datetime object
         '''
+        self._shower = shower
         self._begin = begin
         self._end = end
-        self._shower = shower
-        # Set other parameters
+        # Set other parameters which have been supplied
         for kw in keywords.keys():
             self.__setattr__("_"+kw, keywords[kw])
             
@@ -79,12 +83,24 @@ class FluxData(object):
         
     
     def _bin(self):
+    	# Make sure data has been loaded
         if not hasattr(self, '_data'):
             self._load()
+        # If data has been loaded but none is available, the result is the empty set!
         if len(self._data) == 0:
             self._bins = []
             return None
         
+        # We should support different binning algorithms
+        if self._bin_mode == "adaptive":
+        	self._bin_adaptive()
+        elif self._bin_mode == "fixed":
+        	self._bin_fixed()
+        else:
+        	self._bin_adaptive()
+    
+    
+    def _bin_adaptive(self):
         bins_time, bins_teff, bins_eca, bins_met = [], [], [], []
         
         current_bin_deltaseconds = []
@@ -130,7 +146,57 @@ class FluxData(object):
                 'time':time, 'teff':teff, \
                 'flux':flux, 'e_flux':e_flux, \
                 'met':count, 'eca':eca}
+
+
+    def _bin_fixed(self):
+    	# Lists to hold the bins
+        bins_time, bins_teff, bins_eca, bins_met = [], [], [], []
+        
+        # Bin length
+        bin_length = datetime.timedelta(self._min_interval/24.)
+        
+        # Temporary variables
+        current_bin_end = self._begin + bin_length
+        current_bin_teff, current_bin_eca, current_bin_met = 0, 0, 0, 0
+        
+        # Loop over data
+        for row in self._data:
+        	# Convert SQL datetime string into Python datetime object
+            rowtime = datetime.datetime.strptime(row['time'], "%Y-%m-%d %H:%M:%S") 
+            
+            # Create new bin if boundary passed
+            if (rowtime >= current_bin_end):
+                bins_time.append( current_bin_end - length/2 )
+                bins_teff.append( current_bin_teff )
+                bins_eca.append( current_bin_eca )
+                bins_met.append( current_bin_met )
+                current_bin_end += bin_length
+                current_bin_teff, current_bin_eca, current_bin_met = 0, 0, 0
+            
+            # Add data to current bin
+            current_bin_teff += row['teff']
+            current_bin_eca += row['eca']
+            current_bin_met += row['met']
+        
+        # Final bin
+        bins_time.append( current_bin_end - length/2 )
+        bins_teff.append( current_bin_teff )
+        bins_eca.append( current_bin_eca )
+        bins_met.append( current_bin_met )
+                
+        time = np.array(bins_time)
+        eca = np.array(bins_eca)
+        teff = np.array(bins_teff)
+        count = np.array(bins_met)
+        # Units: meteoroids / 1000 km^2 h
+        flux = 1000.0*((count+0.5)/eca) 
+        e_flux = 1000.0*np.sqrt(count+0.5)/eca
+        self._bins = {'shower':self._shower, \
+                'time':time, 'teff':teff, \
+                'flux':flux, 'e_flux':e_flux, \
+                'met':count, 'eca':eca}
     
+	
     def getData(self):
         if not hasattr(self, '_data'):
             self._load()
@@ -505,6 +571,8 @@ if __name__ == '__main__':
     from optparse import OptionParser
     usage = "usage: %prog [options] shower begin end"
     parser = OptionParser(usage)
+    parser.add_option("-b", "--bin-mode", dest="bin_mode", default="adaptive", type="string", \
+                      metavar="N", help="minimum number of meteors per bin, default = 20")
     parser.add_option("-m", "--min-meteors", dest="min_meteors", default="20", type="int", \
                       metavar="N", help="minimum number of meteors per bin, default = 20")
     parser.add_option("-e", "--min-eca", dest="min_eca", default="0", type="float", \
@@ -527,6 +595,7 @@ if __name__ == '__main__':
         print "Error: need at least 3 arguments"
     
     fg = FluxPage(args[0], args[1], args[2], \
+    			   bin_mode=opts.bin_mode, \
                    min_meteors=opts.min_meteors, min_eca=opts.min_eca, \
                    min_interval=opts.min_interval, max_interval=opts.max_interval, \
                    popindex=opts.popindex, stations=opts.stations)
