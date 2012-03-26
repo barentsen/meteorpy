@@ -103,12 +103,11 @@ class FluxData(object):
     def _bin_adaptive(self):
         bins_time, bins_teff, bins_eca, bins_met = [], [], [], []
         
-        current_bin_deltaseconds = []
-        current_bin_start, current_bin_teff, current_bin_eca, current_bin_met = 0, 0, 0, 0
+        current_bin_deltaseconds = [0]
+        current_bin_start = self._begin
+        current_bin_teff, current_bin_eca, current_bin_met = 0, 0, 0
         for row in self._data:
-            rowtime = datetime.datetime.strptime(row['time'], "%Y-%m-%d %H:%M:%S") 
-            if current_bin_start == 0:
-                current_bin_start = rowtime
+            rowtime = datetime.datetime.strptime(row['time'], "%Y-%m-%d %H:%M:%S")
             
             deltaseconds = self.diff_seconds(rowtime - current_bin_start)
             deltahours = deltaseconds/3600.0
@@ -117,12 +116,14 @@ class FluxData(object):
                     and current_bin_eca >= (self._min_eca*1000.0) \
                     and deltahours >= self._min_interval) \
                 or (deltahours >= self._max_interval):
-                bins_time.append( current_bin_start+datetime.timedelta(seconds=np.mean(current_bin_deltaseconds)) )
-                bins_teff.append( current_bin_teff )
-                bins_eca.append( current_bin_eca )
-                bins_met.append( current_bin_met )
-                current_bin_deltaseconds = []
-                current_bin_start, current_bin_teff, current_bin_eca, current_bin_met = rowtime, 0, 0, 0
+                if (current_bin_eca > 0):
+					bins_time.append( current_bin_start+datetime.timedelta(seconds=np.mean(current_bin_deltaseconds)) )
+					bins_teff.append( current_bin_teff )
+					bins_eca.append( current_bin_eca )
+					bins_met.append( current_bin_met )
+                current_bin_deltaseconds = [0.0]
+                current_bin_start = rowtime
+                current_bin_teff, current_bin_eca, current_bin_met = 0, 0, 0
         
             current_bin_deltaseconds.append( deltaseconds )
             current_bin_teff += row['teff']
