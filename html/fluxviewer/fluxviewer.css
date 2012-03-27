@@ -1,0 +1,137 @@
+
+label {
+	font-weight:bold;	
+}
+
+.option {
+	color:#cd0a0a; 
+	font-weight:bold;
+	font-size: 1.25em;
+}
+
+
+body {
+	font-family:Verdana,Geneva,sans-serif;
+ 	font-size:13px;
+    background-color: #d7ebf9;
+    margin:0px;
+} 
+
+
+  div#top  {
+     position: absolute;
+     z-index:10;
+     top:0;
+     left:0;
+     width: 100%;
+     background-color: #d7ebf9;
+  }  
+
+   div#mid  {
+     position: relative;
+     width: 100%;
+     
+     padding:0em 0em 60px; /* bottom padding for footer */
+     background-color: #f2f5f7;
+ }  
+  
+   div#bottom  {
+     position: relative;
+     margin-top:20px;
+     clear:both;
+     width: 100%;
+     background-color: #d7ebf9;
+  }   
+ 
+  div#header {  
+  	  padding: 25px 25px 20px 25px;
+  	  position: relative;
+  	  margin-left:auto;
+      margin-right:auto;
+      width:900px;
+      height:60px;
+      background-color: #d7ebf9;
+  }
+  
+  div#content {
+  	  z-index:199;
+  	  position: relative;
+  	  float:center;
+  	  clear:both;
+  	  top:75px;
+  	  padding: 20px 25px 10px 25px;
+  	  position: relative;
+  	  margin-left:auto;
+      margin-right:auto;
+      width:900px;
+      min-height:500px;
+      background-color: #ffffff;
+
+  }
+
+  div#footer {
+  	  font-size:11px;
+  	  padding:10px 25px 10px 25px;
+  	  position: relative;
+  	  margin-left:auto;
+      margin-right:auto;
+      width:900px;
+      background-color: #d7ebf9;
+      color: #666666;
+      text-align: center;
+  }  
+  
+div#footer a {
+	color: #666666;
+}
+
+  div.pagetitle {
+  	font-size:1.5em; 
+  	padding-top:2em;
+  	padding-bottom:1em;
+  }
+  
+  
+table {
+	margin-left: auto;
+	margin-right: auto;
+	font-size: 1em;
+	border-collapse: collapse;
+	margin-top:0.8em;
+	margin-bottom:0.8em;
+}
+
+img {
+	margin-top:0.8em;
+	margin-bottom:0.8em;
+	border: 0;
+}
+
+td, th {
+	padding-right:1.2em;
+	padding-left:1.2em;
+	padding-top:0.2em;
+	padding-bottom:0.2em;
+
+}
+
+
+td {
+	border-bottom: 1px solid #CCCCCC;
+	background-color: #f2f5f7;
+	text-align: center;
+
+}
+
+
+th {
+	font-weight: bold;	
+	border-bottom: 3px solid #CCCCCC;
+	background-color: #FBFBFB;	
+	text-align: center;
+	vertical-align: top;
+}
+
+
+	#selectable .ui-selecting { background: #FECA40; }
+	#selectable .ui-selected { background: #F39814; }
