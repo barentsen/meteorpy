@@ -107,14 +107,17 @@ class FluxData(object):
         current_bin_start = self._begin
         current_bin_teff, current_bin_eca, current_bin_met = 0, 0, 0
         
+        my_max_interval = round(self._max_interval, 6) # hours
+        my_min_interval = round(self._min_interval, 6) # hours
+        
         for row in self._data:
             rowtime = datetime.datetime.strptime(row['time'], "%Y-%m-%d %H:%M:%S")
             
             deltaseconds = self.diff_seconds(rowtime - current_bin_start)
-            deltahours = deltaseconds/3600.0
+            deltahours = round(deltaseconds/3600.0, 6)
             
             if (current_bin_met >= self._min_meteors or current_bin_eca >= (self._min_eca*1000.0) \
-            or deltahours >= self._max_interval) and (deltahours >= self._min_interval):
+            or deltahours >= my_max_interval) and (deltahours >= my_min_interval):
                 if len(current_bin_deltaseconds) > 0:
                     bins_time.append( current_bin_start+datetime.timedelta(seconds=np.mean(current_bin_deltaseconds)) )
                     bins_teff.append( current_bin_teff )
