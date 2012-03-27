@@ -278,7 +278,7 @@ class FluxGraph(object):
         self._fig.subplots_adjust(0.1,0.17,0.92,0.87)
                        
         ax_zhr = plt.twinx(ax=ax)
-        ax_zhr.set_ylabel("ZHR", fontsize=16)
+        ax_zhr.set_ylabel("ZHR (r=%.1f)" % self._fluxdata._popindex, fontsize=16)
         ax_zhr.yaxis.set_major_formatter(plt.FuncFormatter(self.zhr_formatter))
         
         ax2 = plt.twiny(ax=ax)
