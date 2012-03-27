@@ -122,17 +122,19 @@
 		</p>
 		<p>
 			<label>
-			Minimum
-				<select id="binmode">
-					<option value="eca" selected="selected">collection area</option>
-					<option value="meteors">meteors</option>
-				</select>
-			per bin =
+			Minimum meteors per bin =
 			</label>
-			<span id="binarg" class="option"></span>
+			<span id="binarg-meteors" class="option"></span>
 		</p>
 		<div id="slider-meteors" style="width:850px;"></div>	
 		
+		<p>
+			<label>
+			Minimum collection area per bin =
+			</label>
+			<span id="binarg-eca" class="option"></span>
+		</p>
+		<div id="slider-eca" style="width:850px;"></div>	
 		
 		<p>
 		Then specify the constraint on the time interval covered by each bin:
@@ -168,6 +170,11 @@
 	</div>
 
 	<div id="tab-other">
+		<p>
+		<label for="ymax">Y max:</label>
+		<input type="text" id="ymax" class="option" style="width:3em;" value="" /> 
+		</p>
+		
 		<p>Options to be implemented:</p>
 		<p>- CSV export<br/>
 		- Selecting multiple stations<br/>

@@ -37,15 +37,16 @@
 
 
 	
-	function get_binarg() {
+	function get_binarg_meteors() {
 		return Math.round(Math.pow(10, $( "#slider-meteors" ).slider( "value" )))
 	}
 
-	function get_binarg_pretty() {
-		if ( $("#binmode").val() == "eca" ) {
-			return get_binarg()*1000 +" km<sup>2</sup> &middot; h ";
-		}		
-		return get_binarg();
+	function get_binarg_eca() {
+		return Math.round(Math.pow(10, $( "#slider-eca" ).slider( "value" )))
+	}
+	
+	function get_binarg_eca_pretty() {
+		return get_binarg_eca()*1000 +" km<sup>2</sup> &middot; h ";
 	}
 	
 	function duration_to_hours(duration) {
@@ -67,7 +68,7 @@
 	}
 
 	function loadplot() {
-		$('#status').html("<span style='font-size:1.5em; color:#666666;'><img src='/flx/lib/images/pleasewait.gif' style='vertical-align:middle;'/> Please wait</span>")
+		$('#status').html("<span style='font-size:1.5em; color:#666666;'><img src='lib/images/pleasewait.gif' style='vertical-align:middle;'/> Please wait</span>")
 		$('#profile').html("");
 		
 		//url = "http://vmo.imo.net/flx/fluxviewer/api_v1.php?";
@@ -76,19 +77,20 @@
 		url += "&begin_iso=" + $('#begin').val();      
 		url += "&end_iso=" + $('#end').val();
 		
-		if ( $( "#binmode" ).val() == "eca" ) {
-			url += "&min_eca=" + get_binarg();
-			url += "&min_meteors=0";
-		} else {
-			url += "&min_meteors=" + get_binarg();
-			url += "&min_eca=0";			
-		}
-			
+		url += "&min_eca=" + get_binarg_eca();
+		url += "&min_meteors=" + get_binarg_meteors();
+		
 		url += "&min_interval=" + duration_to_hours($("#slider-duration").slider("values", 0));
 		url += "&max_interval=" + duration_to_hours($("#slider-duration").slider("values", 1));  
 		url += "&popindex=" + $( '#popindex' ).val();
 		url += "&stations=" + $( '#stations' ).val();
 		url += "&output=" + $( '#output' ).val();
+		
+		ymax = $('#ymax').val();
+		if ( ymax ) {
+			url += "&ymax=" + ymax;
+		}
+		
 		$('#profile').load( encodeURI(url), function() {
 				$('#status').html("");
 		});
@@ -103,14 +105,23 @@
 			step:0.0001,
 			value: Math.log(20) / Math.log(10),
 			slide: function( event, ui ) {
-				$( "#binarg" ).html( get_binarg_pretty() );
+				$( "#binarg-meteors" ).html( get_binarg_meteors() );
 			}
 		});
 		
-		$( "#binmode" ).change(function() {
-				$( "#binarg" ).html( get_binarg_pretty() );
+		$( "#binarg-meteors" ).html( get_binarg_meteors() );
+
+		$( "#slider-eca" ).slider({
+			min: -0.35,
+			max: 3.0,
+			step:0.0001,
+			value: Math.log(20) / Math.log(10),
+			slide: function( event, ui ) {
+				$( "#binarg-eca" ).html( get_binarg_eca_pretty() );
+			}
 		});
-		$( "#binarg" ).html( get_binarg_pretty() );
+		
+		$( "#binarg-eca" ).html( get_binarg_eca_pretty() );
 		
 		$( "#slider-duration" ).slider({
 			range: true,
