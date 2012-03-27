@@ -71,7 +71,7 @@ class FluxData(object):
                      AND shower = '%s' 
                      AND eca IS NOT NULL
                      AND eca >0.50
-		     %s
+             %s
                  GROUP BY time 
                  ORDER BY time""" % (pg.escape_string(str(self._begin)), pg.escape_string(str(self._end)), \
                                      pg.escape_string(self._shower), stationcond)
@@ -83,7 +83,7 @@ class FluxData(object):
         
     
     def _bin(self):
-    	# Make sure data has been loaded
+        # Make sure data has been loaded
         if not hasattr(self, '_data'):
             self._load()
         # If data has been loaded but none is available, the result is the empty set!
@@ -93,11 +93,11 @@ class FluxData(object):
         
         # We should support different binning algorithms
         if self._bin_mode == "adaptive":
-        	self._bin_adaptive()
+            self._bin_adaptive()
         elif self._bin_mode == "fixed":
-        	self._bin_fixed()
+            self._bin_fixed()
         else:
-        	self._bin_adaptive()
+            self._bin_adaptive()
     
     
     def _bin_adaptive(self):
@@ -106,34 +106,29 @@ class FluxData(object):
         current_bin_deltaseconds = []
         current_bin_start = self._begin
         current_bin_teff, current_bin_eca, current_bin_met = 0, 0, 0
+        
         for row in self._data:
             rowtime = datetime.datetime.strptime(row['time'], "%Y-%m-%d %H:%M:%S")
             
             deltaseconds = self.diff_seconds(rowtime - current_bin_start)
             deltahours = deltaseconds/3600.0
             
-            #if (current_bin_met >= self._min_meteors \
-            #        and current_bin_eca >= (self._min_eca*1000.0) \
-            #        and deltahours >= self._min_interval) \
-            #    or (deltahours >= self._max_interval):
-            if (current_bin_met >= self._min_meteors \
-            or current_bin_eca >= (self._min_eca*1000.0) \
-            or deltahours >= self._max_interval) \
-            and (deltahours >= self._min_interval):
-                if len(current_bin_deltaseconds) > 1:
-					bins_time.append( current_bin_start+datetime.timedelta(seconds=np.mean(current_bin_deltaseconds)) )
-					bins_teff.append( current_bin_teff )
-					bins_eca.append( current_bin_eca )
-					bins_met.append( current_bin_met )
+            if (current_bin_met >= self._min_meteors or current_bin_eca >= (self._min_eca*1000.0) \
+            or deltahours >= self._max_interval) and (deltahours >= self._min_interval):
+                if len(current_bin_deltaseconds) > 0:
+                    bins_time.append( current_bin_start+datetime.timedelta(seconds=np.mean(current_bin_deltaseconds)) )
+                    bins_teff.append( current_bin_teff )
+                    bins_eca.append( current_bin_eca )
+                    bins_met.append( current_bin_met )
 
                 
-                #Start counting the duration of the next bin from the end of the last
+                # Start counting the duration of the next bin from the end of the last
                 if (deltahours >= self._max_interval):
-					# If previous bin was cut off because of max_interval
-					current_bin_start += datetime.timedelta(hours=self._max_interval)
+                    # If previous bin was cut off because of max_interval
+                    current_bin_start += datetime.timedelta(minutes=round(self._max_interval*60))
                 else:
-                	# Otherwise start from true end of previous bin
-                	current_bin_start += datetime.timedelta(seconds=current_bin_deltaseconds[-1])
+                    # Otherwise start from true end of previous bin
+                    current_bin_start += datetime.timedelta(minutes=round(current_bin_deltaseconds[-1]/60.)+1)
                 
                 #print "New bin starts at %s" % current_bin_start
                 # Reset bins
@@ -167,7 +162,7 @@ class FluxData(object):
 
 
     def _bin_fixed(self):
-    	# Lists to hold the bins
+        # Lists to hold the bins
         bins_time, bins_teff, bins_eca, bins_met = [], [], [], []
         
         # Bin length
@@ -179,18 +174,18 @@ class FluxData(object):
         
         # Loop over data
         for row in self._data:
-        	# Convert SQL datetime string into Python datetime object
+            # Convert SQL datetime string into Python datetime object
             rowtime = datetime.datetime.strptime(row['time'], "%Y-%m-%d %H:%M:%S") 
             
             # Create new bin if boundary passed
             if (rowtime >= current_bin_end):
-            	if (current_bin_met >= self._min_meteors \
-            		and current_bin_eca >= (self._min_eca*1000.0) \
-            		and current_bin_eca > 0): 
-            		bins_time.append( current_bin_end - bin_length/2 )
-            		bins_teff.append( current_bin_teff )
-            		bins_eca.append( current_bin_eca )
-            		bins_met.append( current_bin_met )
+                if (current_bin_met >= self._min_meteors \
+                    and current_bin_eca >= (self._min_eca*1000.0) \
+                    and current_bin_eca > 0): 
+                    bins_time.append( current_bin_end - bin_length/2 )
+                    bins_teff.append( current_bin_teff )
+                    bins_eca.append( current_bin_eca )
+                    bins_met.append( current_bin_met )
                 
                 current_bin_end += bin_length
                 current_bin_teff, current_bin_eca, current_bin_met = 0, 0, 0
@@ -204,10 +199,10 @@ class FluxData(object):
         if (current_bin_met >= self._min_meteors \
             and current_bin_eca >= (self._min_eca*1000.0) \
             and current_bin_eca > 0):
-			bins_time.append( current_bin_end - bin_length/2 )
-			bins_teff.append( current_bin_teff )
-			bins_eca.append( current_bin_eca )
-			bins_met.append( current_bin_met )
+            bins_time.append( current_bin_end - bin_length/2 )
+            bins_teff.append( current_bin_teff )
+            bins_eca.append( current_bin_eca )
+            bins_met.append( current_bin_met )
                 
         time = np.array(bins_time)
         eca = np.array(bins_eca)
@@ -221,7 +216,7 @@ class FluxData(object):
                 'flux':flux, 'e_flux':e_flux, \
                 'met':count, 'eca':eca}
     
-	
+    
     def getData(self):
         if not hasattr(self, '_data'):
             self._load()
@@ -251,7 +246,7 @@ class FluxGraph(object):
     _ymax = None
 
     def __init__(self, shower, begin, end, **keywords):
-    	self._shower = shower
+        self._shower = shower
         # Convert ISO timestamps to Python DateTime objects
         self._begin = common.iso2datetime(begin)
         self._end = common.iso2datetime(end)
@@ -287,7 +282,7 @@ class FluxGraph(object):
           
         ax.grid(which="both")
         
-        if len(bins) > 0:
+        if len(bins) > 0 and len(bins['time']) > 0:
             ax.errorbar(bins['time'], bins['flux'], yerr=bins['e_flux'], fmt="s", ms=4, lw=1.0, c='red' )    #fmt="+", ms=8    
         
         ax.set_xlim([self._begin, self._end])
@@ -296,9 +291,11 @@ class FluxGraph(object):
         
         # Determine the limit of the Y axis
         if self._ymax:
-        	my_ymax = self._ymax
+            my_ymax = self._ymax
+        elif len(bins) == 0 or len(bins['time']) == 0:
+        	my_ymax = 100
         else:
-        	my_ymax = 1.1*max(bins['flux']+bins['e_flux'])
+            my_ymax = 1.1*max(bins['flux']+bins['e_flux'])
         
         if len(bins) > 0:
             ax.set_ylim([0, my_ymax])
@@ -454,8 +451,8 @@ class FluxGraph(object):
                          LEFT JOIN metrecflux_meta AS meta ON x.filename = meta.filename
                          WHERE time BETWEEN '%s' AND '%s' 
                          AND shower = '%s'
-        	         AND eca IS NOT NULL
-	                 AND eca > 0.00
+                     AND eca IS NOT NULL
+                     AND eca > 0.00
                          %s
                          GROUP BY UPPER(station)
                          ORDER BY UPPER(station) ) AS a
@@ -468,8 +465,8 @@ class FluxGraph(object):
                             WHERE 
                                 time BETWEEN '%s' AND '%s' 
                                 AND shower= 'SPO'
-    		                AND eca IS NOT NULL
-                		AND eca > 0.00
+                            AND eca IS NOT NULL
+                        AND eca > 0.00
                             GROUP BY UPPER(station)
                         ) AS b ON a.station = b.station        
                          """ % (pg.escape_string(str(self._begin)), pg.escape_string(str(self._end)), \
@@ -545,7 +542,7 @@ class FluxGraph(object):
         if round(zhr) < 10:
             return "%.1f" % zhr
         else:
-        	return "%.0f" % zhr
+            return "%.0f" % zhr
         
     
 
@@ -633,7 +630,7 @@ if __name__ == '__main__':
         print "Error: need at least 3 arguments"
     
     fg = FluxPage(args[0], args[1], args[2], \
-    			   bin_mode=opts.bin_mode, ymax=opts.ymax, \
+                   bin_mode=opts.bin_mode, ymax=opts.ymax, \
                    min_meteors=opts.min_meteors, min_eca=opts.min_eca, \
                    min_interval=opts.min_interval, max_interval=opts.max_interval, \
                    popindex=opts.popindex, stations=opts.stations)
