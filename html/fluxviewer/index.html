@@ -1,0 +1,213 @@
+<!DOCTYPE HTML>
+<html>
+
+<head>
+	<title>MetRec FluxViewer</title>
+	<link type="text/css" href="lib/jquery-ui.css" rel="stylesheet" />	
+	<link type="text/css" href="fluxviewer.css" rel="stylesheet" />	
+	<script type="text/javascript" src="lib/jquery.js"></script>
+	<script type="text/javascript" src="lib/jquery-ui.js"></script>
+	<script type="text/javascript" src="fluxviewer.js"></script>
+</head>
+
+
+<body>
+
+ <div id="top">
+ <div id="header" style="font-size:2.5em;">
+<a href="index.html" style="text-decoration:none; color:black;">MetRec FluxViewer v0.4</a>
+</div>
+ </div>
+ 
+<div id="mid">
+ <div id="content">
+
+
+<div id="settings-tabs">
+	<ul>
+		<li><a href="#tab-shower">Shower &amp; Date</a></li>
+		<li><a href="#tab-binning">Binning</a></li>
+		<li><a href="#tab-stations">Stations</a></li>
+		<li><a href="#tab-other">Other</a></li>
+	</ul>
+	
+	<div id="tab-shower">
+
+		<p>
+		
+		<label for="showercode">Shower: </label>
+		<select id="showercode" class="option">
+			<optgroup label="Continuous">
+				<option value="SPO">SPO - Sporadics</option>
+				<option value="ANT">ANT - Antihelion</option>
+			</optgroup>
+			<optgroup label="January - June">
+				<option value="QUA" selected="selected">QUA - Quadrantids (1/3)</option>
+				<option value="ACE">ACE - alpha-Centaurids (2/7)</option>
+				<option value="DLE">DLE - delta-Leonids (2/24)</option>
+				<option value="GNO">GNO - gamma-Normids (3/13)</option>
+				<option value="LYR">LYR - Lyrids (4/22)</option>
+				<option value="PPU">PPU - pi-Puppids (4/24)</option>
+				<option value="ETA">ETA - eta-Aquarids (5/5)</option>
+				<option value="ELY">ELY - eta-Lyrids (5/9)</option>
+				<option value="JBO">JBO - June-Bootids (6/27)</option>
+			</optgroup>
+			<optgroup label="July - August">
+				<option value="PAU">PAU - Piscis-Austrinids (7/28)</option>
+				<option value="SDA">SDA - S-delta-Aquarids (7/28)</option>
+				<option value="CAP">CAP - alpha-Capricornids (7/30)</option>
+				<option value="PER">PER - Perseids (8/12)</option>
+				<option value="KCG">KCG - kappa-Cygnids (8/17)</option>
+			</optgroup>
+			<optgroup label="September - October">
+				<option value="AUR">AUR - alpha-Aurigids (9/1)</option>
+				<option value="SPE">SPE - September-Perseids (9/9)</option>
+				<option value="DAU">DAU - delta-Aurigids (10/4)</option>
+				<option value="OCA">OCA - Oct-Camelopardalids (10/6)</option>
+				<option value="GIA">GIA - Draconids (10/8)</option>
+				<option value="TUM">TUM - tau-Ursa-Majorids (10/16)</option>
+				<option value="EGE">EGE - epsilon-Geminids (10/18)</option>
+				<option value="ORI">ORI - Orionids (10/21)</option>
+				<option value="LMI">LMI - Leo-Minorids (10/24)</option>
+				<option value="STA">STA - S-Taurids (10/10)</option>
+				
+			</optgroup>
+			<optgroup label="November - December">
+				<option value="NTA">NTA - N-Taurids (11/12)</option>
+				<option value="LEO">LEO - Leonids (11/17)</option>
+				<option value="AMO">AMO - alpha-Monocerotids (11/21)</option>
+				<option value="PHO">PHO - December-Phoenicids (12/6)</option>
+				<option value="PUP">PUP - Puppid-Velids (12/7)</option>
+				<option value="MON">MON - Monocerotids (12/9)</option>
+				<option value="HYD">HYD - sigma-Hydrids (12/12)</option>
+				<option value="GEM">GEM - Geminids (12/14)</option>
+				<option value="COM">COM - Coma-Berenicids (12/19)</option>
+				<option value="URS">URS - Ursids (12/22)</option>
+			</optgroup>
+		</select>
+			
+		</p>		
+		
+		<p >
+		<label for="begin">Interval:</label>
+		<input type="text" id="begin" class="option" style="width:11em;" value="2012-01-01 00:00:00" />
+		- <input type="text" id="end" class="option" style="width:11em;" value="2012-01-05 00:00:00" /> 
+		<!-- <br/>(use an ISO 8601 timestamp, e.g. 2012-08-12 00:00:00) -->
+		</p>
+
+		<p>
+		<label for="begin">Pop. index:</label>
+		<input type="text" id="popindex" class="option" style="width:3em;" value="2.1" /> (for conversion to ZHR only)
+		</p>
+		
+		<p>
+			<label for="output">Output:</label>
+			<select id="output" class="option">
+				<option value="graph">Graph only</option>
+				<option value="full">Graph &amp; Tables (slower)</option>
+			</select>
+		</p>
+		
+	</div>
+	
+	<div id="tab-binning">
+		<p>
+		Meteor counts are added together into
+		variable-sized bins before the flux is computed for each bin.
+		The size of the bins can be defined using the settings below.
+		</p>
+		
+		<p>
+		First, specify how much data you want in each bin:
+		</p>
+		<p>
+			<label>
+			Minimum
+				<select id="binmode">
+					<option value="eca" selected="selected">collection area</option>
+					<option value="meteors">meteors</option>
+				</select>
+			per bin =
+			</label>
+			<span id="binarg" class="option"></span>
+		</p>
+		<div id="slider-meteors" style="width:850px;"></div>	
+		
+		
+		<p>
+		Then specify the constraint on the time interval covered by each bin:
+		</p>
+		
+		<p>
+			<label>Bin duration (min-max) =</label>
+			<span id="duration" class="option"></span>
+		</p>
+		<div id="slider-duration" style="width:850px;"></div>
+	</div>
+	
+	
+	<div id="tab-stations">
+		<p>
+		<label for="stations">Station name:</label>
+		<input type="text" id="stations" class="option" style="width:7em;" value="" />
+		(e.g. MINCAM1)
+		</p>
+		
+		<!-- <table id="selectable" cellpadding="20">
+		<tr><td>AAA</td><td>50</td></tr>
+		<tr><td>BBB</td><td>60</td></tr>
+		</table>
+		
+		<ul id="selectable">
+		<li>MINCAM1</li>
+		<li>MINCAM2</li>
+		</ul>
+		-->
+		<p>Leave empty to use all stations.</p>
+		
+	</div>
+
+	<div id="tab-other">
+		<p>Options to be implemented:</p>
+		<p>- CSV export<br/>
+		- Selecting multiple stations<br/>
+		- Outlier rejection<br/>  
+		- Minimum Lm<br/>
+		- Population index<br/>
+	</div>
+</div>
+
+
+<div style="margin:1em 0 1em 0;">
+<button class="update">Update settings</button>
+<span id="status" style="margin-left:2em;"></span>
+</div>
+
+
+
+<div id="profile">
+<!-- Will load through AJAX -->
+
+</div>
+
+<!--
+<button class="link">Direct link</button>
+-->
+	
+ </div>
+</div>
+
+ <div id="bottom">
+ 	<div id="footer">
+Based on data collected by observers in the <a href="http://www.imonet.org">IMO Video Meteor Network</a>.<br/>
+Contact: Sirko Molau, Geert Barentsen.
+	</div>
+ </div>
+ 
+
+
+
+</body> 
+  
+</html>
+
