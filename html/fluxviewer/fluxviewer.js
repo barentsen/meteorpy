@@ -1,3 +1,5 @@
+	debug = function (msg) { if (window.console != undefined) { console.log(msg); } }
+	
 	var showers = [
 		{code:"QUA", r:"2.1", begin:"01-01", end:"01-05", max:"01-03", name:"Quadrantids        "},
 		{code:"ACE", r:"2.0", begin:"01-28", end:"02-21", max:"02-07", name:"alpha-Centaurids   "},			
@@ -51,6 +53,16 @@
 	
 	function duration_to_hours(duration) {
 		hours = Math.pow(10, duration);
+		// Ensure the value given to the webservice call is exactly equal to the value shown to the user
+		if (hours < 1.01) {
+			return Math.round(hours*60.0)/60.0;
+		} else if (hours < 12) {
+			return hours.toFixed(1);
+		} else if (hours < 24) {
+			return hours.toFixed(0);
+		} else {
+			return Math.round(hours/24.0)*24.0;
+		}		
 		return hours;
 	}
 	
@@ -93,6 +105,7 @@
 		
 		$('#profile').load( encodeURI(url), function() {
 				$('#status').html("");
+				debug("Call: "+url);
 		});
 	}
 	
