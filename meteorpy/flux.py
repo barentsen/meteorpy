@@ -611,7 +611,7 @@ if __name__ == '__main__':
                       metavar="BINMODE", help="binning algorithm to use, default = adaptive")
     parser.add_option("-m", "--min-meteors", dest="min_meteors", default="20", type="int", \
                       metavar="N", help="minimum number of meteors per bin, default = 20")
-    parser.add_option("-e", "--min-eca", dest="min_eca", default="0", type="float", \
+    parser.add_option("-e", "--min-eca", dest="min_eca", default="100", type="float", \
                       metavar="F", help="minimum ECA per bin, default = 0")
     parser.add_option("-i", "--min-interval", dest="min_interval", default="1.0", type="float", \
                       metavar="HOURS", help="minimum bin length, default = 1 h")
