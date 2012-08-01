@@ -131,7 +131,7 @@ class FluxData(object):
                     current_bin_start += datetime.timedelta(minutes=round(self._max_interval*60))
                 else:
                     # Otherwise start from true end of previous bin
-                    current_bin_start += datetime.timedelta(minutes=round(current_bin_deltaseconds[-1]/60.)+1)
+                    current_bin_start += datetime.timedelta(minutes=round(current_bin_deltaseconds[-1]/60.))
                 
                 #print "New bin starts at %s" % current_bin_start
                 # Reset bins
