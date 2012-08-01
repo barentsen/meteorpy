@@ -260,7 +260,7 @@ class FluxGraph(object):
         
         # Total number of seconds represented along X axis
         self._timespan = (self._end-self._begin).total_seconds()
-        if self._timespan > (40*86400):
+        if self._timespan > (90*86400):
             raise Exception("Requested time interval too long.")
             
         
