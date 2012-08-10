@@ -138,7 +138,8 @@
 		
 		$( "#slider-duration" ).slider({
 			range: true,
-			min: -1.7,
+			#min: -1.7,
+			min: 3.38,
 			max: 3.38,
 			step:0.001,
 			values: [ Math.log(0.166667) / Math.log(10), Math.log(24) / Math.log(10) ],
