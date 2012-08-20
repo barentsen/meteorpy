@@ -41,9 +41,14 @@ class FluxData(object):
         self._shower = shower
         self._begin = begin
         self._end = end
+        
         # Set other parameters which have been supplied
         for kw in keywords.keys():
             self.__setattr__("_"+kw, keywords[kw])
+        
+        # Default zenith exponent gamma, used for: ECA *= cos(90-rad_alt)^(gamma-1.0)
+        if "gamma" not in keywords.keys():
+            self._gamma = 2.0
             
         
     def _load(self):
@@ -62,19 +67,26 @@ class FluxData(object):
         sql = """SELECT 
                     time, 
                     SUM(teff) AS teff, 
-                    SUM(eca) AS eca, 
+                    -- SUM(eca) AS eca,
+                    SUM( eca * cos(radians(90-alt))^(%s-1.0) ) AS eca,
                     SUM(met) AS met,
                     COUNT(*) AS stations
                  FROM metrecflux
                  WHERE 
-                     time >= '%s'::timestamp AND time <= '%s'::timestamp
-                     AND shower = '%s' 
+                     time >= '%s'::timestamp 
+                     AND time <= '%s'::timestamp
+                     AND shower = '%s'
                      AND eca IS NOT NULL
-                     AND eca >0.50
-             %s
+                     AND alt > 0
+                     AND eca > 0.50
+                     %s
                  GROUP BY time 
-                 ORDER BY time""" % (pg.escape_string(str(self._begin)), pg.escape_string(str(self._end)), \
-                                     pg.escape_string(self._shower), stationcond)
+                 ORDER BY time""" % (self._gamma, \
+                                     pg.escape_string(str(self._begin)), \
+                                     pg.escape_string(str(self._end)), \
+                                     pg.escape_string(self._shower), \
+                                     stationcond)
+        
         result = vmo.sql(sql)
         if result != None:
             self._data = result
@@ -619,6 +631,8 @@ if __name__ == '__main__':
                       metavar="HOURS", help="maximum bin length, default = 24 h")
     parser.add_option("-r", "--popindex", dest="popindex", default="2.0", type="float", \
                       metavar="POPINDEX", help="population index")
+    parser.add_option("-g", "--gamma", dest="gamma", default="2.0", type="float", \
+                      metavar="GAMMA", help="correction for radiant elevation")
     parser.add_option("-y", "--ymax", dest="ymax", default=None, type="float", \
                       metavar="YMAX", help="maximum limit of the Y axis")
     parser.add_option("-s", "--stations", dest="stations", default="", type="string", \
@@ -636,7 +650,8 @@ if __name__ == '__main__':
                    bin_mode=opts.bin_mode, ymax=opts.ymax, \
                    min_meteors=opts.min_meteors, min_eca=opts.min_eca, \
                    min_interval=opts.min_interval, max_interval=opts.max_interval, \
-                   popindex=opts.popindex, stations=opts.stations)
+                   popindex=opts.popindex, gamma=opts.gamma, \
+                   stations=opts.stations)
     fg.printHTML(output=opts.output, plotdir=opts.plot_dir)
     
     time_finish = datetime.datetime.now()
