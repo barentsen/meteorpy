@@ -138,11 +138,11 @@
 		
 		$( "#slider-duration" ).slider({
 			range: true,
-			#min: -1.7,
-			min: 3.38,
+			min: -1.7,
 			max: 3.38,
 			step:0.001,
-			values: [ Math.log(0.166667) / Math.log(10), Math.log(24) / Math.log(10) ],
+			//values: [ Math.log(0.166667) / Math.log(10), Math.log(24) / Math.log(10) ],
+			values: [ Math.log(24) / Math.log(10), Math.log(24) / Math.log(10) ],
 			slide: function( event, ui ) {
 				$( "#duration" ).text( format_duration(ui.values[0]) + " - " + format_duration(ui.values[1]) );
 			}
