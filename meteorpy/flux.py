@@ -118,32 +118,59 @@ class FluxData(object):
         current_bin_deltaseconds = []
         current_bin_start = self._begin
         current_bin_teff, current_bin_eca, current_bin_met = 0, 0, 0
-        
+      
         my_max_interval = round(self._max_interval, 6) # hours
         my_min_interval = round(self._min_interval, 6) # hours
+
+
+	# Make sure the first bin starts near the actual data
+	delta_max = datetime.timedelta(minutes=round(self._max_interval*60))
+        firsttime = datetime.datetime.strptime(self._data[0]['time'], "%Y-%m-%d %H:%M:%S")
+	while (current_bin_start+delta_max) < firsttime:
+		current_bin_start += delta_max
         
+	import logging
+	logging.basicConfig(level=logging.INFO, filename="/tmp/fluxviewer_binning.log")
+	logging.debug("min/max interval = %s/%s" % (my_min_interval, my_max_interval))
+	logging.debug("Starting first bin at %s" % current_bin_start)
+
         for row in self._data:
             rowtime = datetime.datetime.strptime(row['time'], "%Y-%m-%d %H:%M:%S")
             
             deltaseconds = self.diff_seconds(rowtime - current_bin_start)
             deltahours = round(deltaseconds/3600.0, 6)
             
+	
+	    logging.debug("%s: N=%s ECA=%s dH=%s" % (rowtime, current_bin_met, current_bin_eca, deltahours))
+
             if (current_bin_met >= self._min_meteors or current_bin_eca >= (self._min_eca*1000.0) \
             or deltahours >= my_max_interval) and (deltahours >= my_min_interval):
+
+		logging.debug("New bin at %s" % rowtime)		
+
                 if len(current_bin_deltaseconds) > 0:
                     bins_time.append( current_bin_start+datetime.timedelta(seconds=np.mean(current_bin_deltaseconds)) )
                     bins_teff.append( current_bin_teff )
                     bins_eca.append( current_bin_eca )
                     bins_met.append( current_bin_met )
+		else:
+		    logging.debug("Skipping this bin because it's the first one.")
+
 
                 
                 # Start counting the duration of the next bin from the end of the last
                 if (deltahours >= self._max_interval):
                     # If previous bin was cut off because of max_interval
-                    current_bin_start += datetime.timedelta(minutes=round(self._max_interval*60))
+                    #current_bin_start += datetime.timedelta(minutes=round(self._max_interval*60))
+
+		    while (current_bin_start+delta_max) <= rowtime:
+                    	current_bin_start += delta_max
+		    logging.debug("Next bin starting at +max_interval: %s" % current_bin_start)
                 else:
                     # Otherwise start from true end of previous bin
                     current_bin_start += datetime.timedelta(minutes=round(current_bin_deltaseconds[-1]/60.))
+		    logging.debug("Next bin starting from TRUE END: %s" % current_bin_start)
+
                 
                 #print "New bin starts at %s" % current_bin_start
                 # Reset bins
@@ -288,7 +315,7 @@ class FluxGraph(object):
         self._fig.subplots_adjust(0.1,0.17,0.92,0.87)
                        
         ax_zhr = plt.twinx(ax=ax)
-        ax_zhr.set_ylabel("ZHR (r=%.1f)" % self._fluxdata._popindex, fontsize=16)
+        ax_zhr.set_ylabel("ZHR (r=%.1f, $\gamma$=%.2f)" % (self._fluxdata._popindex, self._fluxdata._gamma), fontsize=16)
         ax_zhr.yaxis.set_major_formatter(plt.FuncFormatter(self.zhr_formatter))
         
         ax2 = plt.twiny(ax=ax)
