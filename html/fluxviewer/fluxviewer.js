@@ -96,6 +96,7 @@
 		url += "&max_interval=" + duration_to_hours($("#slider-duration").slider("values", 1));  
 		url += "&popindex=" + $( '#popindex' ).val();
 		url += "&gamma=" + $( '#gamma' ).val();
+		url += "&min_alt=" + $( '#min_alt' ).val();
 		url += "&stations=" + $( '#stations' ).val();
 		url += "&output=" + $( '#output' ).val();
 		

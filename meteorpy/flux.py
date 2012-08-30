@@ -49,6 +49,12 @@ class FluxData(object):
         # Default zenith exponent gamma, used for: ECA *= cos(90-rad_alt)^(gamma-1.0)
         if "gamma" not in keywords.keys():
             self._gamma = 2.0
+	# Keyword for "off"set in the zenith correction: (off+(1-off)*sin(hr)^gamma)/sin(hr)
+        if "delta" not in keywords.keys():
+            self._delta = 0.0
+        # Minimum radiant altitude [degrees]
+        if "min_alt" not in keywords.keys():
+            self._min_alt = 0.01
             
         
     def _load(self):
@@ -68,7 +74,7 @@ class FluxData(object):
                     time, 
                     SUM(teff) AS teff, 
                     -- SUM(eca) AS eca,
-                    SUM( eca * cos(radians(90-alt))^(%s-1.0) ) AS eca,
+                    SUM( eca * (%.7f + (1-%.7f) * (sin(radians(alt))^%.7f) / sin(radians(alt))) ) AS eca,
                     SUM(met) AS met,
                     COUNT(*) AS stations
                  FROM metrecflux
@@ -77,14 +83,15 @@ class FluxData(object):
                      AND time <= '%s'::timestamp
                      AND shower = '%s'
                      AND eca IS NOT NULL
-                     AND alt > 0
+                     AND alt >= %.7f
                      AND eca > 0.50
                      %s
                  GROUP BY time 
-                 ORDER BY time""" % (self._gamma, \
+                 ORDER BY time""" % (self._delta, self._delta, self._gamma, \
                                      pg.escape_string(str(self._begin)), \
                                      pg.escape_string(str(self._end)), \
                                      pg.escape_string(self._shower), \
+                                     self._min_alt, \
                                      stationcond)
         
         result = vmo.sql(sql)
@@ -658,8 +665,12 @@ if __name__ == '__main__':
                       metavar="HOURS", help="maximum bin length, default = 24 h")
     parser.add_option("-r", "--popindex", dest="popindex", default="2.0", type="float", \
                       metavar="POPINDEX", help="population index")
-    parser.add_option("-g", "--gamma", dest="gamma", default="2.0", type="float", \
+    parser.add_option("-g", "--gamma", dest="gamma", default="1.0", type="float", \
                       metavar="GAMMA", help="correction for radiant elevation")
+    parser.add_option("", "--delta", dest="delta", default="0.0", type="float", \
+                      metavar="DELTA", help="offset for correction of radiant elevation")
+    parser.add_option("-a", "--min-alt", dest="min_alt", default="0.01", type="float", \
+                      metavar="DEGREES", help="minimum radiant elevation")
     parser.add_option("-y", "--ymax", dest="ymax", default=None, type="float", \
                       metavar="YMAX", help="maximum limit of the Y axis")
     parser.add_option("-s", "--stations", dest="stations", default="", type="string", \
@@ -677,7 +688,7 @@ if __name__ == '__main__':
                    bin_mode=opts.bin_mode, ymax=opts.ymax, \
                    min_meteors=opts.min_meteors, min_eca=opts.min_eca, \
                    min_interval=opts.min_interval, max_interval=opts.max_interval, \
-                   popindex=opts.popindex, gamma=opts.gamma, \
+                   popindex=opts.popindex, gamma=opts.gamma, delta=opts.delta, min_alt=opts.min_alt, \
                    stations=opts.stations)
     fg.printHTML(output=opts.output, plotdir=opts.plot_dir)
     
